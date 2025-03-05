@@ -11,4 +11,5 @@ env/
 # Ignore IDE-specific files
 .vscode/
 .idea/
-
+# ignore jupyter notebook checkpoints
+.ipynb_checkpoints/
