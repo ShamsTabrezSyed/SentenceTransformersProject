@@ -1,0 +1,43 @@
+[
+    {
+      "sentence": "John lives in New York.",
+      "label": 1,
+      "ner_tags": ["B-PER", "O", "O", "B-LOC", "I-LOC", "O"]
+    },
+    {
+      "sentence": "Apple is releasing new products.",
+      "label": 0,
+      "ner_tags": ["B-ORG", "O", "O", "O", "O", "O"]
+    },
+    {
+      "sentence": "Google acquired YouTube in 2006.",
+      "label": 0,
+      "ner_tags": ["B-ORG", "O", "B-ORG", "O", "O", "O"]
+    },
+    {
+      "sentence": "Sara moved to San Francisco last year.",
+      "label": 1,
+      "ner_tags": ["B-PER", "O", "O", "B-LOC", "I-LOC", "O", "O", "O"]
+    },
+    {
+      "sentence": "IBM unveiled its quarterly earnings yesterday.",
+      "label": 0,
+      "ner_tags": ["B-ORG", "O", "O", "O", "O", "O", "O"]
+    },
+    {
+      "sentence": "The Eiffel Tower is in Paris.",
+      "label": 1,
+      "ner_tags": ["O", "B-LOC", "I-LOC", "O", "O", "B-LOC", "O"]
+    },
+    {
+      "sentence": "Barack Obama was born in Hawaii.",
+      "label": 1,
+      "ner_tags": ["B-PER", "I-PER", "O", "O", "O", "B-LOC", "O"]
+    },
+    {
+      "sentence": "Tesla unveiled its new electric car.",
+      "label": 0,
+      "ner_tags": ["B-ORG", "O", "O", "O", "O", "O", "O"]
+    }
+  ]
+  

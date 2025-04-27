@@ -1,2 +1,6 @@
-sentence-transformers
 torch
+transformers
+sentence-transformers
+pyyaml
+scikit-learn
+datasets

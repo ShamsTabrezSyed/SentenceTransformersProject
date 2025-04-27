@@ -1,0 +1,23 @@
+[
+    {
+      "sentence": "Microsoft opened a new office in London.",
+      "label": 0,
+      "ner_tags": ["B-ORG", "O", "O", "O", "O", "O", "B-LOC", "O"]
+    },
+    {
+      "sentence": "Emma Watson starred in Harry Potter.",
+      "label": 1,
+      "ner_tags": ["B-PER", "I-PER", "O", "O", "B-LOC", "I-LOC", "O"]
+    },
+    {
+      "sentence": "Amazon acquired Whole Foods for $13.7 billion.",
+      "label": 0,
+      "ner_tags": ["B-ORG", "O", "B-ORG", "I-ORG", "O", "O", "O"]
+    },
+    {
+      "sentence": "Mount Everest is the Earth's highest mountain.",
+      "label": 1,
+      "ner_tags": ["B-LOC", "I-LOC", "O", "O", "B-MISC", "O", "O", "O"]
+    }
+  ]
+  

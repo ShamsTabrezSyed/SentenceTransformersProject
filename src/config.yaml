@@ -1,0 +1,11 @@
+model_name: distilbert-base-uncased
+max_length: 128
+batch_size: 16
+learning_rate: 2e-5
+num_epochs: 3
+weight_decay: 0.01
+train_file: data/train.json
+valid_file: data/valid.json
+num_classes: 2
+num_ner_labels: 5
+save_dir: saved_model/
