@@ -1,47 +1,119 @@
-# Sentence Transformers - Cosine Similarity Example
+# Multi-Task Learning with Sentence Transformers
 
 ## Overview
-Welcome to the **Sentence Transformers - Cosine Similarity** example! In this project, you'll learn how to use the **`sentence-transformers`** library to generate sentence embeddings and compute the cosine similarity between them. The core idea of the script is simple: it takes a list of sentences, encodes them into numerical vectors (embeddings) using a pre-trained model, and then calculates how similar those sentences are to each other by measuring the cosine similarity between their embeddings.
+This project implements a multi-task learning (MTL) architecture using a transformer backbone (`distilbert-base-uncased`) to perform both:
 
-The script uses a very efficient and lightweight transformer model, specifically `all-MiniLM-L6-v2`, to generate these embeddings. You will also see how we use **GPU acceleration** (if available) for faster computations, making it easy to work with a larger number of sentences.
+1. **Sentence Classification** – Assign a class label to an entire sentence.
+2. **Named Entity Recognition (NER)** – Tag each token in a sentence with an entity label.
 
-## Why This Approach?
-Here are some reasons why this approach is a great choice:
+It builds on a pre-trained sentence transformer for embedding extraction, adds two task-specific heads, and trains them jointly via an alternating mini‑batch strategy.
 
-- **Compact and Efficient Model:** 
-  - The `all-MiniLM-L6-v2` model strikes a balance between performance and speed. It is a lightweight model that delivers high-quality sentence embeddings, while being computationally efficient.
-  - This model is perfect when you need to process a good amount of data without straining your system’s resources.
-
-- **GPU Utilization:**
-  - By default, the script checks if a **GPU** is available (via **CUDA**) and automatically runs on it for **faster processing**. If no GPU is available, it runs on the CPU without any issues.
-  
-- **Configurable Embeddings:**
-  - The model’s parameters are customizable. For example, you can adjust batch sizes, normalize embeddings, and control the progress bar display to better suit your needs. This allows for optimal similarity comparisons, even with large datasets.
-
-## Alternatives Considered
-While **sentence-transformers** is a great choice for this task, there are a few other approaches and models worth considering. Let’s take a quick look at some of the alternatives:
-
-1. **BERT-Based Models:**
-   - Models like `bert-base-uncased` are known for their accuracy and are widely used in NLP tasks. However, they are much slower to compute, require more memory, and are generally overkill for similarity tasks where a lightweight model like `all-MiniLM-L6-v2` would suffice.
-   - **Pros:** Better accuracy, more powerful representations.
-   - **Cons:** Slower, higher memory usage.
-
-2. **Traditional Models (TF-IDF, Word2Vec, FastText):**
-   - Older methods like **TF-IDF** or **Word2Vec** are popular, but they fall short when it comes to capturing deep semantic meanings of sentences. They are useful for simpler tasks but may not perform as well for nuanced comparisons.
-   - **Pros:** Simple, fast, and works well for basic tasks.
-   - **Cons:** Lacks deep semantic understanding, struggles with contextual meaning.
-
-3. **Other Sentence Transformers (e.g., `all-mpnet-base-v2`):**
-   - Larger models like `all-mpnet-base-v2` can provide even better sentence embeddings, but they are computationally heavier and may be unnecessary for smaller-scale tasks or real-time applications.
-   - **Pros:** Higher quality embeddings.
-   - **Cons:** Slower, higher resource requirements.
+## Project Structure
+```
+SentenceTransformersProject/
+│
+├── requirements.txt          # Python dependencies               
+│
+├── src/                      # Source code
+│   ├── dataset.py            # MultiTaskDataset loader
+│   ├── multitask_model.py    # Model: shared encoder + two heads
+│   ├── train.py              # Training loop with checkpointing
+│   ├── evaluate.py           # Evaluation on validation set
+│   ├── config.yaml           # Hyperparameters & paths
+│   ├── predict.py            # Inference script for new sentences
+│   └──data/                   # JSON datasets
+│        ├── train.json            # Training samples
+│        └── valid.json            # Validation samples
+│
+├── saved_model/              # Saved checkpoints after training
+├── docs/                     # Documentation and sample outputs
+│    ├── sample_output.txt    # Example inference outputs
+│    ├── README.md            # Project overview (this file)
+│
+│
+└── docker/                   # Docker setup (optional)
+    ├── Dockerfile
+    └── docker-compose.yml
+```
 
 ## Installation
+Ensure you have Python 3.7+ and pip installed. Then:
+```bash
+pip install -r requirements.txt
+```  
+This installs:
+- torch
+- transformers
+- sentence-transformers
+- pyyaml
+- scikit-learn
+- datasets
+- tqdm
 
-Before running the script, make sure you have **Python** installed on your system. You'll also need to install the dependencies. Here’s how you can set it all up:
+## Configuration
+Edit `config.yaml` to customize:
+```yaml
+model_name: distilbert-base-uncased
+max_length: 128
+batch_size: 16
+learning_rate: 2e-5
+num_epochs: 3
+num_classes: 2
+num_ner_labels: 5
+train_file: data/train.json
+valid_file: data/valid.json
+save_dir: saved_model
+```  
+Paths and hyperparameters can be changed as needed.
 
-1. Clone this repository to your local machine:
-   ```bash
-   git clone https://github.com/your-repository/sentence-transformer-example.git
-   cd sentence-transformer-example
+## Training
+Run the training script, specifying epochs, learning rate, and checkpoint directory:
+```bash
+python src/train.py --epochs 3 --lr 3e-5 --checkpoint_dir saved_model
+```  
+- Model checkpoints (`mtl_epoch<epoch>.pt`) will be saved under `saved_model/`.
+
+## Evaluation
+Evaluate on the validation set and view classification & NER metrics:
+```bash
+python src/evaluate.py
+```  
+This loads the latest checkpoint and prints precision, recall, and F1 for each task.
+
+## Inference
+Run predictions on new sentences:
+```bash
+python src/predict.py
+```  
+Example output:
+```
+Classification: 1  # class index
+NER Tags: [("John", 1), ("lives", 0), ...]
+```
+
+## Task Breakdown
+### Task 1: Sentence Transformer Implementation
+- Used `sentence-transformers/all-MiniLM-L6-v2` backbone.
+- Encoded input sentences into fixed-size (384-d) embeddings.
+- Chose dropout + linear projection for classification head.
+
+### Task 2: Multi-Task Learning Expansion
+- **Architecture:** Shared transformer + two heads:
+  - Classification head on [CLS] token.
+  - NER head on token embeddings.
+- **Training:** Alternating mini‑batches between tasks; separate loss functions.
+- **Data Handling:** Padded/truncated NER labels to sequence length with `ignore_index=-100`.
+
+### Task 3: Training Considerations
+- **Freezing Entire Network:** When embeddings suffice—only heads train.
+- **Freezing Backbone Only:** Adapt heads quickly without altering pre-trained features.
+- **Freezing One Head:** Fine-tune one task while holding the other stable.
+- **Transfer Learning:** Select a strong pre-trained model (e.g., BERT), freeze its lower layers, unfreeze higher layers and heads.
+
+### Task 4: Training Loop Implementation
+- **Assumptions:** Synthetic data loader; batch_size=1 for clarity.
+- **Forward Pass:** Route per-task through appropriate head.
+- **Metrics:** Classification accuracy; NER token-level accuracy.
+
+  
 

@@ -1,31 +1,22 @@
 import torch
-import torch.nn as nn
+import torch.nn as nn  # Ensure you have this import to define the model
 from transformers import AutoModel
 
-class MultiTaskSentenceTransformer(nn.Module):
-    def __init__(self, base_model='sentence-transformers/all-MiniLM-L6-v2', num_classes=3, num_ner_tags=5):
+class MultiTaskModel(nn.Module):
+    def __init__(self, base_model_name, num_cls_labels, num_ner_labels):
         super().__init__()
-        self.encoder = AutoModel.from_pretrained(base_model)
+        self.encoder = AutoModel.from_pretrained(base_model_name)
+        hidden_size = self.encoder.config.hidden_size
+        self.classifier = nn.Linear(hidden_size, num_cls_labels)
+        self.ner_head = nn.Linear(hidden_size, num_ner_labels)
 
-        # Sentence Classification Head
-        self.classifier = nn.Sequential(
-            nn.Dropout(0.1),
-            nn.Linear(self.encoder.config.hidden_size, num_classes)
-        )
-
-        # Named Entity Recognition Head
-        self.ner_head = nn.Sequential(
-            nn.Dropout(0.1),
-            nn.Linear(self.encoder.config.hidden_size, num_ner_tags)
-        )
-
-    def forward(self, input_ids, attention_mask, task="classification"):
+    def forward(self, input_ids, attention_mask, task):
         outputs = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
+        sequence_output = outputs.last_hidden_state
         if task == "classification":
-            cls_embedding = outputs.last_hidden_state[:, 0]
-            return self.classifier(cls_embedding)
+            cls_output = sequence_output[:, 0, :]
+            return self.classifier(cls_output)
         elif task == "ner":
-            token_embeddings = outputs.last_hidden_state
-            return self.ner_head(token_embeddings)
+            return self.ner_head(sequence_output)
         else:
-            raise ValueError("Unsupported task: choose either 'classification' or 'ner'")
+            raise ValueError(f"Unknown task: {task}")
